@@ -18,7 +18,6 @@ from facenet_pytorch import MTCNN, InceptionResnetV1
 from sklearn.metrics.pairwise import cosine_similarity
 
 path = os.path.join(os.getcwd(),'database\\embeddings.pkl')
-print(path)
 
 
 cap = cv2.VideoCapture(0)
@@ -45,7 +44,7 @@ if not cap.isOpened():
     exit()
 
 cap_count = 0
-max_count = 5
+max_count = 20
 last_embedding= None
 
 def is_blurry(frame):
@@ -92,17 +91,18 @@ while cap_count < max_count:
             continue
 
         embedding = resnet(face_tensor.unsqueeze(0)).detach().numpy()
-
+        similar = False
         if last_embedding is not None:
             for vector in database[name]:
                 similarity = cosine_similarity(embedding, vector)[0][0]
                 if similarity > 0.90:
                     print('picture is similar, change the frame')
-                    continue
-
-        database[name].append(embedding)
-        last_embedding = embedding
-        cap_count += 1
+                    similar = True
+                    break
+        if not similar:
+            database[name].append(embedding)
+            last_embedding = embedding
+            cap_count += 1
 
     elif key == ord('q'):
         exit()
